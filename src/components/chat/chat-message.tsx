@@ -1,3 +1,6 @@
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
 import type { ChatMessage as ChatMessageType } from "@/types/chat";
 
 interface ChatMessageProps {
@@ -16,11 +19,17 @@ export function ChatMessage({ message }: ChatMessageProps) {
       <div
         className={
           isUser
-            ? "max-w-[75%] rounded-2xl bg-neutral-100 px-4 py-3 text-sm"
-            : "max-w-[75%] px-1 py-3 text-sm leading-7"
+            ? "theme-user-bubble max-w-[75%] rounded-2xl px-4 py-3 text-sm"
+            : "theme-assistant-bubble markdown-body max-w-[75%] px-1 py-3 text-sm"
         }
       >
-        {message.content}
+        {isUser ? (
+          <span className="whitespace-pre-wrap">{message.content}</span>
+        ) : (
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {message.content}
+          </ReactMarkdown>
+        )}
       </div>
     </div>
   );
