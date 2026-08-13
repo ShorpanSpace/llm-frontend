@@ -5,7 +5,8 @@ export type ChatRunState =
   | "running"
   | "streaming"
   | "completed"
-  | "failed";
+  | "failed"
+  | "cancelled";
 
 export interface Conversation {
   id: number;
@@ -42,7 +43,14 @@ export interface ChatMessage {
 export interface ChatRunStatus {
   run_id: string;
   conversation_id: number;
+  user_message_id: number;
+  assistant_message_id: number | null;
   status: ChatRunState;
-  updated_at: number;
   error: string | null;
+  retry_of_id: string | null;
+  attempt: number;
+  created_at: string;
+  started_at: string | null;
+  finished_at: string | null;
+  updated_at: string;
 }

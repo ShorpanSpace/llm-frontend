@@ -110,6 +110,24 @@ export function getChatRunStatus(runId: string): Promise<ChatRunStatus> {
   return request(`/api/v1/chat-runs/${runId}`);
 }
 
+export function getLatestChatRun(
+  conversationId: number
+): Promise<ChatRunStatus | null> {
+  return request(`/api/v1/conversations/${conversationId}/chat-runs/latest`);
+}
+
+export function cancelChatRun(runId: string): Promise<ChatRunStatus> {
+  return request(`/api/v1/chat-runs/${runId}/cancel`, {
+    method: "POST",
+  });
+}
+
+export function retryChatRun(runId: string): Promise<ChatRunStatus> {
+  return request(`/api/v1/chat-runs/${runId}/retry`, {
+    method: "POST",
+  });
+}
+
 export async function sendMessage(
   conversationId: number,
   message: string
