@@ -112,7 +112,7 @@ button:disabled { cursor: not-allowed; }
 .resize-handle:hover, .resize-handle[data-active="true"] { background: color-mix(in srgb, var(--accent) 28%, transparent); }
 
 /* Chat */
-.theme-page { background: var(--canvas); color: var(--text); }
+.theme-page { overflow-x: clip; background: var(--canvas); color: var(--text); }
 .theme-muted { color: var(--text-tertiary); }
 .theme-toggle { border-color: var(--border); color: var(--text-secondary); transition: background-color .16s ease, color .16s ease, transform .2s ease; }
 .theme-toggle:hover { color: var(--text); transform: rotate(12deg); }
@@ -120,11 +120,21 @@ button:disabled { cursor: not-allowed; }
 .theme-assistant-bubble { color: var(--text); }
 .theme-message-action { color: var(--text-tertiary); transition: background-color .14s ease, color .14s ease; }
 .theme-message-action:hover, .theme-message-action:focus-visible { background: var(--surface-hover); color: var(--text); }
-.theme-run-notice { border: 1px solid var(--border-subtle); background: color-mix(in srgb, var(--surface-subtle) 72%, transparent); color: var(--text-secondary); }
-.theme-run-failed { color: var(--text-tertiary); }
-.theme-run-pulse { background: var(--text-secondary); animation: run-pulse 1.2s ease-in-out infinite; }
-.theme-run-action { color: var(--text); transition: background-color .14s ease, color .14s ease; }
-.theme-run-action:hover, .theme-run-action:focus-visible { background: var(--surface-hover); }
+.theme-thinking { color: var(--text-tertiary); }
+.theme-thinking-spinner { border: 2px solid var(--border); border-top-color: var(--text-secondary); animation: thinking-spin .72s linear infinite; }
+.theme-thinking-stop { color: var(--text-secondary); transition: background-color .14s ease, color .14s ease; }
+.theme-thinking-stop:hover, .theme-thinking-stop:focus-visible { background: var(--surface-hover); color: var(--text); }
+.theme-run-retry { color: var(--text-tertiary); }
+.chat-outline { position: absolute; top: 50%; right: 1rem; z-index: 15; width: 2rem; height: min(52vh, 34rem); transform: translateY(-50%); }
+.chat-outline-handle { display: flex; width: 2rem; align-items: center; justify-content: center; color: var(--text-tertiary); transition: color .16s ease; }
+.chat-outline:hover .chat-outline-handle, .chat-outline:focus-within .chat-outline-handle { color: var(--text-secondary); }
+.chat-outline-panel { position: absolute; top: 0; right: 2rem; width: 14rem; max-height: inherit; overflow: hidden; border-left: 1px solid var(--border-subtle); background: var(--canvas); opacity: 0; pointer-events: none; transform: translateX(calc(100% + 1rem)); transition: transform .24s cubic-bezier(.2,.8,.2,1), opacity .16s ease; }
+.chat-outline:hover .chat-outline-panel, .chat-outline:focus-within .chat-outline-panel { opacity: 1; pointer-events: auto; transform: translateX(0); }
+.chat-outline-title { padding: .85rem .9rem .55rem; color: var(--text-tertiary); font-size: .68rem; font-weight: 650; letter-spacing: .12em; text-transform: uppercase; }
+.chat-outline-list { max-height: calc(min(52vh, 34rem) - 2.4rem); overflow-y: auto; padding: 0 .45rem .55rem; }
+.chat-outline-item { display: flex; align-items: center; gap: .6rem; color: var(--text-secondary); transition: background-color .14s ease, color .14s ease; }
+.chat-outline-item:hover, .chat-outline-item:focus-visible { background: var(--surface-hover); color: var(--text); }
+.chat-outline-index { display: inline-flex; width: 1rem; flex: 0 0 1rem; justify-content: center; color: var(--text-tertiary); font-size: .65rem; font-variant-numeric: tabular-nums; }
 .markdown-body { line-height: 1.75; overflow-wrap: anywhere; }
 .markdown-body > :first-child { margin-top: 0; }
 .markdown-body > :last-child { margin-bottom: 0; }
@@ -166,6 +176,8 @@ button:disabled { cursor: not-allowed; }
 .theme-textarea::placeholder { color: var(--text-tertiary); }
 .theme-send { background: var(--control-strong); color: var(--on-control-strong); transition: opacity .16s ease, transform .16s ease; }
 .theme-send:hover:not(:disabled) { opacity: .82; transform: translateY(-1px); }
+.theme-stop { background: var(--danger); color: #fff; transition: opacity .16s ease, transform .16s ease; }
+.theme-stop:hover:not(:disabled) { opacity: .84; transform: scale(.96); }
 
 @keyframes popover-in {
   from { opacity: 0; transform: translateY(-4px) scale(.98); }
@@ -177,8 +189,8 @@ button:disabled { cursor: not-allowed; }
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes run-pulse {
-  50% { opacity: .32; transform: scale(.75); }
+@keyframes thinking-spin {
+  to { transform: rotate(360deg); }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -8,9 +8,10 @@ import type { ChatMessage as ChatMessageType } from "@/types/chat";
 
 interface ChatMessageProps {
   message: ChatMessageType;
+  anchorId?: string;
 }
 
-export function ChatMessage({ message }: ChatMessageProps) {
+export function ChatMessage({ message, anchorId }: ChatMessageProps) {
   const isUser = message.role === "user";
   const [copied, setCopied] = useState(false);
 
@@ -26,6 +27,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
   return (
     <div
+      id={anchorId}
       className={`group/message flex ${
         isUser ? "justify-end" : "justify-start"
       }`}

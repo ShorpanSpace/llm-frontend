@@ -10,12 +10,16 @@ import {
 
 interface ChatInputProps {
   disabled?: boolean;
+  isGenerating?: boolean;
   onSend: (message: string) => Promise<void>;
+  onStop?: () => void;
 }
 
 export function ChatInput({
   disabled = false,
+  isGenerating = false,
   onSend,
+  onStop,
 }: ChatInputProps) {
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -36,7 +40,7 @@ export function ChatInput({
 
     const message = value.trim();
 
-    if (!message || disabled) {
+    if (!message || disabled || isGenerating) {
       return;
     }
 
@@ -60,33 +64,47 @@ export function ChatInput({
           value={value}
           onChange={(event) => setValue(event.target.value)}
           onKeyDown={handleKeyDown}
+          disabled={disabled || isGenerating}
           placeholder="Message Agent Workspace"
           rows={1}
           className="theme-textarea box-border min-w-0 flex-1 resize-none bg-transparent px-2 py-1 text-sm outline-none"
         />
 
-        <button
-          disabled={disabled || !value.trim()}
-          type="submit"
-          className="theme-send flex h-8 w-8 shrink-0 items-center justify-center rounded-full disabled:opacity-30"
-          aria-label="Send message"
-          title="Send message"
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
+        {isGenerating ? (
+          <button
+            type="button"
+            onClick={onStop}
+            disabled={!onStop}
+            className="theme-stop flex h-8 w-8 shrink-0 items-center justify-center rounded-full disabled:opacity-30"
+            aria-label="Stop generating"
+            title="Stop generating"
           >
-            <path d="M12 19V5" />
-            <path d="m6 11 6-6 6 6" />
-          </svg>
-        </button>
+            <span className="h-2.5 w-2.5 rounded-[2px] bg-current" aria-hidden="true" />
+          </button>
+        ) : (
+          <button
+            disabled={disabled || !value.trim()}
+            type="submit"
+            className="theme-send flex h-8 w-8 shrink-0 items-center justify-center rounded-full disabled:opacity-30"
+            aria-label="Send message"
+            title="Send message"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 19V5" />
+              <path d="m6 11 6-6 6 6" />
+            </svg>
+          </button>
+        )}
       </div>
     </form>
   );

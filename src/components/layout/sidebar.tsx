@@ -109,6 +109,24 @@ export function Sidebar() {
     };
   }, [isResizing]);
 
+  useEffect(() => {
+    if (!menu) return;
+
+    function closeMenuOnOutsidePointer(event: PointerEvent) {
+      if (!(event.target instanceof Element)) return;
+      if (
+        event.target.closest("[data-sidebar-menu]") ||
+        event.target.closest("[data-sidebar-menu-trigger]")
+      ) {
+        return;
+      }
+      setMenu(null);
+    }
+
+    document.addEventListener("pointerdown", closeMenuOnOutsidePointer);
+    return () => document.removeEventListener("pointerdown", closeMenuOnOutsidePointer);
+  }, [menu]);
+
   function startResize(event: ReactMouseEvent) {
     resizeStart.current = { x: event.clientX, width };
     setIsResizing(true);
@@ -203,13 +221,14 @@ export function Sidebar() {
             <button
               type="button"
               onClick={() => setMenu(menu === target ? null : target)}
+              data-sidebar-menu-trigger
               className="sidebar-icon-button mr-1 rounded-lg p-1.5 opacity-0 focus:opacity-100 group-hover:opacity-100"
               aria-label={`Actions for ${item.title}`}
             >
               <Icon name="dots" size={16} />
             </button>
             {menu === target && (
-              <div className="sidebar-popover absolute right-1 top-10 z-30 min-w-40 rounded-xl border p-1.5 text-xs">
+              <div data-sidebar-menu className="sidebar-popover absolute right-1 top-10 z-30 min-w-40 rounded-xl border p-1.5 text-xs">
                 <button
                   className="sidebar-menu-item flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left"
                   onClick={() => {
@@ -372,6 +391,7 @@ export function Sidebar() {
                     <button
                       type="button"
                       onClick={() => setMenu(menu === target ? null : target)}
+                      data-sidebar-menu-trigger
                       className="sidebar-icon-button rounded-lg p-1.5"
                       aria-label={`Project settings for ${project.title}`}
                     >
@@ -379,7 +399,7 @@ export function Sidebar() {
                     </button>
                   </div>
                   {menu === target && (
-                    <div className="sidebar-popover absolute right-0 top-10 z-30 min-w-40 rounded-xl border p-1.5 text-xs">
+                    <div data-sidebar-menu className="sidebar-popover absolute right-0 top-10 z-30 min-w-40 rounded-xl border p-1.5 text-xs">
                       <button
                         className="sidebar-menu-item flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left"
                         onClick={() => void createConversation(project.id)}
