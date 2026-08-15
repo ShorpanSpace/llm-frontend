@@ -54,3 +54,15 @@ export interface ChatRunStatus {
   finished_at: string | null;
   updated_at: string;
 }
+
+export interface ChatRunTraceEvent {
+  event_type: string;
+  occurred_at: string;
+  attributes: Record<string, unknown> | null;
+}
+
+export interface ChatRunTimingReport {
+  run_id: string;
+  events: ChatRunTraceEvent[];
+  durations_ms: Record<string, number>;
+}

@@ -1,5 +1,6 @@
 import type {
   ChatRunStatus,
+  ChatRunTimingReport,
   Conversation,
   Message,
   Project,
@@ -7,6 +8,13 @@ import type {
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+
+type ClientTelemetryEvent =
+  | "client_response_headers"
+  | "client_first_delta_received"
+  | "client_stream_completed";
+
+type StreamTransport = "initial" | "resume";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -110,6 +118,12 @@ export function getChatRunStatus(runId: string): Promise<ChatRunStatus> {
   return request(`/api/v1/chat-runs/${runId}`);
 }
 
+export function getChatRunTimings(
+  runId: string
+): Promise<ChatRunTimingReport> {
+  return request(`/api/v1/chat-runs/${runId}/timings`);
+}
+
 export function getLatestChatRun(
   conversationId: number
 ): Promise<ChatRunStatus | null> {
@@ -156,6 +170,7 @@ export async function streamMessage(
   onDelta: (delta: string) => void,
   onRunId?: (runId: string) => void
 ): Promise<string | null> {
+  const startedAt = performance.now();
   const response = await fetch(
     `${API_BASE_URL}/api/v1/conversations/${conversationId}/messages/stream`,
     {
@@ -174,9 +189,34 @@ export async function streamMessage(
   const runId = response.headers.get("X-Chat-Run-Id");
   if (runId) {
     onRunId?.(runId);
+    reportChatRunTelemetry(
+      runId,
+      "client_response_headers",
+      performance.now() - startedAt,
+      "initial"
+    );
   }
 
-  await consumeSse(response, onDelta);
+  await consumeSse(response, onDelta, {
+    onFirstDelta: () => {
+      if (runId) {
+        reportChatRunTelemetry(
+          runId,
+          "client_first_delta_received",
+          performance.now() - startedAt,
+          "initial"
+        );
+      }
+    },
+  });
+  if (runId) {
+    reportChatRunTelemetry(
+      runId,
+      "client_stream_completed",
+      performance.now() - startedAt,
+      "initial"
+    );
+  }
   return runId;
 }
 
@@ -185,6 +225,7 @@ export async function subscribeChatRun(
   onDelta: (delta: string) => void,
   lastEventId = "0-0"
 ): Promise<void> {
+  const startedAt = performance.now();
   const params = new URLSearchParams({
     last_event_id: lastEventId,
   });
@@ -201,12 +242,34 @@ export async function subscribeChatRun(
     throw new Error(`Request failed with status ${response.status}`);
   }
 
-  await consumeSse(response, onDelta);
+  reportChatRunTelemetry(
+    runId,
+    "client_response_headers",
+    performance.now() - startedAt,
+    "resume"
+  );
+  await consumeSse(response, onDelta, {
+    onFirstDelta: () => {
+      reportChatRunTelemetry(
+        runId,
+        "client_first_delta_received",
+        performance.now() - startedAt,
+        "resume"
+      );
+    },
+  });
+  reportChatRunTelemetry(
+    runId,
+    "client_stream_completed",
+    performance.now() - startedAt,
+    "resume"
+  );
 }
 
 async function consumeSse(
   response: Response,
-  onDelta: (delta: string) => void
+  onDelta: (delta: string) => void,
+  callbacks?: { onFirstDelta?: () => void }
 ): Promise<void> {
   if (!response.body) {
     throw new Error("The streaming response has no body.");
@@ -215,6 +278,7 @@ async function consumeSse(
   const reader = response.body!.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
+  let receivedFirstDelta = false;
 
   while (true) {
     const { done, value } = await reader.read();
@@ -248,8 +312,34 @@ async function consumeSse(
       }
 
       if (event.delta) {
+        if (!receivedFirstDelta) {
+          receivedFirstDelta = true;
+          callbacks?.onFirstDelta?.();
+        }
         onDelta(event.delta);
       }
     }
   }
+}
+
+function reportChatRunTelemetry(
+  runId: string,
+  eventType: ClientTelemetryEvent,
+  elapsedMs: number,
+  transport: StreamTransport
+): void {
+  void fetch(`${API_BASE_URL}/api/v1/chat-runs/${runId}/telemetry`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      event_type: eventType,
+      elapsed_ms: elapsedMs,
+      transport,
+    }),
+    keepalive: true,
+  }).catch(() => {
+    // Timing reporting is intentionally best-effort and never affects chat UI.
+  });
 }

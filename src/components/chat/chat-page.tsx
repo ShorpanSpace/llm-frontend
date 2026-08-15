@@ -15,6 +15,7 @@ import type { ChatMessage, ChatRunStatus } from "@/types/chat";
 
 import { ChatInput } from "./chat-input";
 import { ChatMessage as ChatMessageView } from "./chat-message";
+import { TracePanel } from "./trace-panel";
 import { useTheme } from "../layout/theme-context";
 
 interface ChatPageProps {
@@ -357,6 +358,9 @@ export function ChatPage({ conversationId }: ChatPageProps) {
 
   return (
     <div className="theme-page relative flex h-screen flex-col">
+      <div className="absolute right-14 top-5 z-30">
+        <TracePanel run={latestRun} isRunning={hasActiveRun} />
+      </div>
       <button
         type="button"
         onClick={toggleTheme}
